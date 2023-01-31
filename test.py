@@ -5,6 +5,9 @@ Trains a character-level language model.
 import os
 import sys
 
+import pandas
+import random
+
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
@@ -52,8 +55,9 @@ class CharDataset(Dataset):
 
     def __init__(self, config, data):
         self.config = config
-
-        chars = sorted(list(set(data)))
+        chars = open('input.txt').read()
+        chars = sorted(list(set(chars)))
+        print(chars)
         data_size, vocab_size = len(data), len(chars)
         print('data has %d characters, %d unique.' % (data_size, vocab_size))
 
@@ -69,11 +73,12 @@ class CharDataset(Dataset):
         return self.config.block_size
 
     def __len__(self):
-        return len(self.data) - self.config.block_size
+        return len(self.data)
 
     def __getitem__(self, idx):
         # grab a chunk of (block_size + 1) characters from the data
-        chunk = self.data[idx:idx + self.config.block_size + 1]
+
+        chunk = self.data['title'][idx]
         # encode every character to an integer
         dix = [self.stoi[s] for s in chunk]
         # return as tensors
@@ -93,7 +98,7 @@ if __name__ == '__main__':
     set_seed(config.system.seed)
 
     # construct the training dataset
-    text = open('input.txt', 'r').read() # don't worry we won't run out of file handles
+    text = pandas.read_json(path_or_buf='input.txt') # don't worry we won't run out of file handles
     train_dataset = CharDataset(config.data, text)
 
     # construct the model
